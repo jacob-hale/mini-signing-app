@@ -29,6 +29,7 @@ export function DocumentEditorPage({ documentId }: Props) {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [recipientChoice, setRecipientChoice] = useState('')
   const [templateName, setTemplateName] = useState('')
+  const [showTemplateModal, setShowTemplateModal] = useState(false)
   const [undoStack, setUndoStack] = useState<DocumentInstance[]>([])
   const [banner, setBanner] = useState<{
     text: string
@@ -44,6 +45,8 @@ export function DocumentEditorPage({ documentId }: Props) {
     setErrors({})
     setRecipientChoice('')
     setBanner(null)
+    setShowTemplateModal(false)
+    setTemplateName('')
   }, [documentId])
 
   void version
@@ -306,10 +309,17 @@ export function DocumentEditorPage({ documentId }: Props) {
     setBanner({ text: 'Document completed and locked.', tone: 'ok' })
   }
 
+  const openSaveTemplate = () => {
+    if (!isSender || document.fields.length === 0) return
+    setTemplateName(templateName.trim() || 'Master Agreement – standard')
+    setShowTemplateModal(true)
+  }
+
   const handleSaveTemplate = () => {
     if (!isSender) return
     const name = templateName.trim() || 'Master Agreement – standard'
     saveAsTemplate(document.id, name)
+    setShowTemplateModal(false)
     setBanner({ text: `Template “${name}” saved.`, tone: 'ok' })
     setTemplateName('')
   }
@@ -362,16 +372,10 @@ export function DocumentEditorPage({ documentId }: Props) {
           {placementMode && <span className="hint">Click a page to place a field</span>}
           {document.status === 'draft' && isSender && (
             <>
-              <input
-                className="template-name-input"
-                placeholder="Template name"
-                value={templateName}
-                onChange={(e) => setTemplateName(e.target.value)}
-              />
               <button
                 type="button"
                 className="btn secondary"
-                onClick={handleSaveTemplate}
+                onClick={openSaveTemplate}
                 disabled={document.fields.length === 0}
               >
                 Save as template
@@ -410,6 +414,51 @@ export function DocumentEditorPage({ documentId }: Props) {
           <button type="button" className="banner-dismiss" onClick={() => setBanner(null)}>
             ×
           </button>
+        </div>
+      )}
+
+      {showTemplateModal && (
+        <div
+          className="modal-backdrop"
+          role="presentation"
+          onClick={() => setShowTemplateModal(false)}
+        >
+          <div
+            className="modal"
+            role="dialog"
+            aria-labelledby="save-template-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="save-template-title">Save as template</h2>
+            <p className="muted">
+              Name this field layout so you can reuse it for new documents.
+            </p>
+            <label className="modal-field">
+              Template name
+              <input
+                value={templateName}
+                autoFocus
+                placeholder="Master Agreement – standard"
+                onChange={(e) => setTemplateName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSaveTemplate()
+                  if (e.key === 'Escape') setShowTemplateModal(false)
+                }}
+              />
+            </label>
+            <div className="btn-row modal-actions">
+              <button
+                type="button"
+                className="btn secondary"
+                onClick={() => setShowTemplateModal(false)}
+              >
+                Cancel
+              </button>
+              <button type="button" className="btn primary" onClick={handleSaveTemplate}>
+                Save template
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
