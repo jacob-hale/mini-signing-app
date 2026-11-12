@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useAppState } from '../state/AppState'
 import { getUserById } from '../data/users'
 import type { DocumentInstance, DocumentStatus } from '../types'
@@ -13,7 +14,11 @@ function roleFor(doc: DocumentInstance, userId: string): string {
 }
 
 export function DocumentList() {
-  const { documents, currentUser, createDraft, setView } = useAppState()
+  const { documents, currentUser, createDraft, setView, deleteDraft } = useAppState()
+  const [pendingDelete, setPendingDelete] = useState<{
+    id: string
+    title: string
+  } | null>(null)
 
   return (
     <div className="page-panel">
@@ -65,6 +70,7 @@ export function DocumentList() {
               <th>Your role</th>
               <th>Other party</th>
               <th>Updated</th>
+              <th />
             </tr>
           </thead>
           <tbody>
@@ -76,6 +82,8 @@ export function DocumentList() {
                     '—'
                   : getUserById(doc.senderId)?.name ?? '—'
               const stamp = doc.completedAt ?? doc.sentAt ?? doc.createdAt
+              const canDelete =
+                doc.status === 'draft' && doc.senderId === currentUser.id
               return (
                 <tr
                   key={doc.id}
@@ -88,11 +96,65 @@ export function DocumentList() {
                   <td>{roleFor(doc, currentUser.id)}</td>
                   <td>{other}</td>
                   <td className="muted">{new Date(stamp).toLocaleString()}</td>
+                  <td>
+                    {canDelete && (
+                      <button
+                        type="button"
+                        className="btn danger"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setPendingDelete({ id: doc.id, title: doc.title })
+                        }}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </td>
                 </tr>
               )
             })}
           </tbody>
         </table>
+      )}
+
+      {pendingDelete && (
+        <div
+          className="modal-backdrop"
+          role="presentation"
+          onClick={() => setPendingDelete(null)}
+        >
+          <div
+            className="modal"
+            role="alertdialog"
+            aria-labelledby="delete-draft-title"
+            aria-describedby="delete-draft-desc"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="delete-draft-title">Delete draft?</h2>
+            <p id="delete-draft-desc" className="muted">
+              Are you sure you want to delete “{pendingDelete.title}”? This cannot be undone.
+            </p>
+            <div className="btn-row modal-actions">
+              <button
+                type="button"
+                className="btn secondary"
+                onClick={() => setPendingDelete(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn danger"
+                onClick={() => {
+                  deleteDraft(pendingDelete.id)
+                  setPendingDelete(null)
+                }}
+              >
+                Delete draft
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

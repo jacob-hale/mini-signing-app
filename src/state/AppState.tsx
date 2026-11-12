@@ -33,6 +33,7 @@ interface AppStateValue {
   refresh: () => void
   createDraft: (opts?: { fromTemplateId?: string; usePreset?: boolean }) => DocumentInstance
   updateDocument: (doc: DocumentInstance) => DocumentInstance
+  deleteDraft: (id: string) => void
   saveAsTemplate: (documentId: string, name: string) => Template
   deleteTemplate: (id: string) => void
 }
@@ -123,6 +124,22 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     [refresh],
   )
 
+  const deleteDraft = useCallback(
+    (id: string) => {
+      const doc = documentRepo.getDocument(id)
+      if (!doc) return
+      if (doc.status !== 'draft') {
+        throw new Error('Only drafts can be deleted')
+      }
+      if (doc.senderId !== currentUser.id) {
+        throw new Error('Only the sender can delete a draft')
+      }
+      documentRepo.deleteDocument(id)
+      refresh()
+    },
+    [currentUser.id, refresh],
+  )
+
   const saveAsTemplate = useCallback(
     (documentId: string, name: string) => {
       const doc = documentRepo.getDocument(documentId)
@@ -162,6 +179,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       refresh,
       createDraft,
       updateDocument,
+      deleteDraft,
       saveAsTemplate,
       deleteTemplate,
     }),
@@ -174,6 +192,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       refresh,
       createDraft,
       updateDocument,
+      deleteDraft,
       saveAsTemplate,
       deleteTemplate,
     ],
