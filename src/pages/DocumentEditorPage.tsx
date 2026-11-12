@@ -5,6 +5,12 @@ import { getSourceDocument } from '../data/sampleDoc'
 import { getUserById, USERS } from '../data/users'
 import { documentRepo } from '../repo/documentRepo'
 import { applyAutoFills, useAppState } from '../state/AppState'
+import {
+  hasTitleSuffix,
+  joinTitle,
+  splitTitle,
+  withRecipientSuffix,
+} from '../title'
 import type { Assignee, DocumentInstance, FieldDef } from '../types'
 import { validateAssigneeFields } from '../validation'
 
@@ -125,6 +131,16 @@ export function DocumentEditorPage({ documentId }: Props) {
       return
     }
 
+    // Fill empty suffix from recipient so the inbox title is distinctive
+    const title = withRecipientSuffix(document.title, recipient.name)
+    if (!hasTitleSuffix(title)) {
+      setBanner({
+        text: 'Add a name after the dash in the title (or pick a recipient).',
+        tone: 'error',
+      })
+      return
+    }
+
     const withAutos = applyAutoFills(
       document.fields,
       document.values,
@@ -157,6 +173,7 @@ export function DocumentEditorPage({ documentId }: Props) {
 
     persist({
       ...document,
+      title,
       values: withAutos,
       status: 'sent',
       recipientId: recipient.id,
@@ -169,6 +186,25 @@ export function DocumentEditorPage({ documentId }: Props) {
       tone: 'ok',
     })
     setSelectedFieldId(null)
+  }
+
+  const { base: titleBase, suffix: titleSuffix } = splitTitle(document.title)
+
+  const updateTitleSuffix = (suffix: string) => {
+    persist({ ...document, title: joinTitle(titleBase, suffix) })
+  }
+
+  const onRecipientChange = (userId: string) => {
+    setRecipientChoice(userId)
+    const recipient = getUserById(userId)
+    if (!recipient) return
+    // Only auto-fill when the suffix is still empty so custom names aren’t overwritten
+    if (!hasTitleSuffix(document.title)) {
+      persist({
+        ...document,
+        title: joinTitle(titleBase, recipient.name),
+      })
+    }
   }
 
   const handleComplete = () => {
@@ -233,7 +269,21 @@ export function DocumentEditorPage({ documentId }: Props) {
           ← Documents
         </button>
         <div className="editor-title">
-          <strong>{document.title}</strong>
+          {document.status === 'draft' && isSender ? (
+            <label className="title-edit">
+              <span className="title-base">{titleBase}</span>
+              <span className="title-sep"> - </span>
+              <input
+                className="title-suffix-input"
+                value={titleSuffix}
+                placeholder="customer or deal name"
+                aria-label="Title details after the dash"
+                onChange={(e) => updateTitleSuffix(e.target.value)}
+              />
+            </label>
+          ) : (
+            <strong>{document.title}</strong>
+          )}
           <span className={`badge status-${document.status}`}>{document.status}</span>
           {!isSender && !isRecipient && (
             <span className="muted">You are not a party on this document.</span>
@@ -259,7 +309,7 @@ export function DocumentEditorPage({ documentId }: Props) {
               </button>
               <select
                 value={recipientChoice}
-                onChange={(e) => setRecipientChoice(e.target.value)}
+                onChange={(e) => onRecipientChange(e.target.value)}
                 aria-label="Choose recipient"
               >
                 <option value="">Select recipient…</option>

@@ -278,6 +278,41 @@ select {
   gap: 0.5rem;
   flex: 1;
   min-width: 180px;
+  flex-wrap: wrap;
+}
+
+.title-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  min-width: 0;
+  flex: 1;
+}
+
+.title-base {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.title-sep {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.title-suffix-input {
+  flex: 1;
+  min-width: 140px;
+  max-width: 280px;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: white;
+  font-weight: 600;
+}
+
+.title-suffix-input::placeholder {
+  font-weight: 400;
+  color: var(--muted);
 }
 
 .hint {

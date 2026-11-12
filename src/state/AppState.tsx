@@ -79,17 +79,18 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     (opts?: { fromTemplateId?: string; usePreset?: boolean }) => {
       let fields: FieldDef[] = []
       let templateId: string | null = null
-      let title = `${MASTER_AGREEMENT.title} (draft)`
+      // "Base - " pattern: sender fills the part after the dash (or we use recipient name)
+      let title = 'Untitled - '
 
       if (opts?.fromTemplateId) {
         const template = documentRepo.getTemplate(opts.fromTemplateId)
         if (!template) throw new Error('Template not found')
         fields = cloneFields(template.fields)
         templateId = template.id
-        title = `${template.name} — copy`
+        title = `${template.name} - `
       } else if (opts?.usePreset) {
         fields = createMasterAgreementPresetFields()
-        title = `${MASTER_AGREEMENT.title} (preset layout)`
+        title = `${MASTER_AGREEMENT.title} - `
       }
 
       const doc: DocumentInstance = {
