@@ -1,7 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useState, type MouseEvent } from 'react'
+import { ReminderModal } from './ReminderModal'
 import { useAppState } from '../state/AppState'
 import { getUserById } from '../data/users'
-import type { DocumentInstance, DocumentStatus } from '../types'
+import {
+  buildReminderDraft,
+  canSendReminder,
+  formatRetryWait,
+  getReminders,
+} from '../reminders'
+import type { DocumentInstance, DocumentStatus, ReminderEmail } from '../types'
 
 function statusLabel(status: DocumentStatus): string {
   return status.charAt(0).toUpperCase() + status.slice(1)
@@ -14,11 +21,76 @@ function roleFor(doc: DocumentInstance, userId: string): string {
 }
 
 export function DocumentList() {
-  const { documents, currentUser, createDraft, setView, deleteDraft } = useAppState()
+  const { documents, currentUser, createDraft, setView, deleteDraft, updateDocument } =
+    useAppState()
   const [pendingDelete, setPendingDelete] = useState<{
     id: string
     title: string
   } | null>(null)
+  const [reminderDoc, setReminderDoc] = useState<DocumentInstance | null>(null)
+  const [listBanner, setListBanner] = useState<{
+    text: string
+    tone: 'error' | 'ok'
+  } | null>(null)
+  const [nowTick, setNowTick] = useState(() => Date.now())
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNowTick(Date.now()), 1000)
+    return () => window.clearInterval(id)
+  }, [])
+
+  const openReminder = (doc: DocumentInstance, e: MouseEvent) => {
+    e.stopPropagation()
+    const gate = canSendReminder(doc, new Date(nowTick))
+    if (!gate.ok) {
+      const wait = gate.retryAt
+        ? ` Try again in ${formatRetryWait(gate.retryAt, new Date(nowTick))}.`
+        : ''
+      setListBanner({ text: `${gate.reason}${wait}`, tone: 'error' })
+      return
+    }
+    setReminderDoc(doc)
+  }
+
+  const handleSendReminder = (subject: string, body: string) => {
+    if (!reminderDoc) return
+    const gate = canSendReminder(reminderDoc)
+    if (!gate.ok) {
+      setListBanner({ text: gate.reason, tone: 'error' })
+      setReminderDoc(null)
+      return
+    }
+    const toEmail = reminderDoc.recipientEmail
+    const toName = reminderDoc.recipientName
+    if (!toEmail || !toName) {
+      setListBanner({ text: 'Recipient email is missing.', tone: 'error' })
+      setReminderDoc(null)
+      return
+    }
+
+    const reminder: ReminderEmail = {
+      id: crypto.randomUUID(),
+      sentAt: new Date().toISOString(),
+      sentByUserId: currentUser.id,
+      toEmail,
+      toName,
+      subject,
+      body,
+    }
+
+    updateDocument({
+      ...reminderDoc,
+      reminders: [...getReminders(reminderDoc), reminder],
+    })
+    setReminderDoc(null)
+    setListBanner({
+      text: `Reminder emailed to ${toName} (mock send). They’ll see it when they open the document.`,
+      tone: 'ok',
+    })
+  }
+
+  const reminderDraft =
+    reminderDoc != null ? buildReminderDraft(reminderDoc, currentUser) : null
 
   return (
     <div className="page-panel">
@@ -53,6 +125,22 @@ export function DocumentList() {
         </div>
       </div>
 
+      {listBanner && (
+        <div
+          className={`banner banner-${listBanner.tone}`}
+          role={listBanner.tone === 'error' ? 'alert' : 'status'}
+        >
+          {listBanner.text}
+          <button
+            type="button"
+            className="banner-dismiss"
+            onClick={() => setListBanner(null)}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {documents.length === 0 ? (
         <div className="empty-state">
           <p>No documents yet.</p>
@@ -84,6 +172,9 @@ export function DocumentList() {
               const stamp = doc.completedAt ?? doc.sentAt ?? doc.createdAt
               const canDelete =
                 doc.status === 'draft' && doc.senderId === currentUser.id
+              const reminderGate = canSendReminder(doc, new Date(nowTick))
+              const canRemind =
+                doc.status === 'sent' && doc.senderId === currentUser.id
               return (
                 <tr
                   key={doc.id}
@@ -97,18 +188,40 @@ export function DocumentList() {
                   <td>{other}</td>
                   <td className="muted">{new Date(stamp).toLocaleString()}</td>
                   <td>
-                    {canDelete && (
-                      <button
-                        type="button"
-                        className="btn danger"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setPendingDelete({ id: doc.id, title: doc.title })
-                        }}
-                      >
-                        Delete
-                      </button>
-                    )}
+                    <div className="btn-row table-actions" onClick={(e) => e.stopPropagation()}>
+                      {canRemind && (
+                        <button
+                          type="button"
+                          className="btn secondary"
+                          disabled={!reminderGate.ok}
+                          title={
+                            reminderGate.ok
+                              ? 'Compose a reminder email'
+                              : reminderGate.retryAt
+                                ? `Available in ${formatRetryWait(reminderGate.retryAt, new Date(nowTick))}`
+                                : reminderGate.reason
+                          }
+                          onClick={(e) => openReminder(doc, e)}
+                        >
+                          {reminderGate.ok
+                            ? 'Send reminder'
+                            : reminderGate.retryAt
+                              ? `Remind in ${formatRetryWait(reminderGate.retryAt, new Date(nowTick))}`
+                              : 'Send reminder'}
+                        </button>
+                      )}
+                      {canDelete && (
+                        <button
+                          type="button"
+                          className="btn danger"
+                          onClick={() =>
+                            setPendingDelete({ id: doc.id, title: doc.title })
+                          }
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               )
@@ -155,6 +268,17 @@ export function DocumentList() {
             </div>
           </div>
         </div>
+      )}
+
+      {reminderDoc && reminderDraft && reminderDoc.recipientEmail && reminderDoc.recipientName && (
+        <ReminderModal
+          toName={reminderDoc.recipientName}
+          toEmail={reminderDoc.recipientEmail}
+          initialSubject={reminderDraft.subject}
+          initialBody={reminderDraft.body}
+          onCancel={() => setReminderDoc(null)}
+          onSend={handleSendReminder}
+        />
       )}
     </div>
   )

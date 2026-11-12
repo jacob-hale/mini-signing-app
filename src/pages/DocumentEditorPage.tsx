@@ -1,15 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { DocumentViewer } from '../components/DocumentViewer'
 import { FieldInspector } from '../components/FieldInspector'
-import { ReminderModal } from '../components/ReminderModal'
+import { RecipientReminderBanner } from '../components/RecipientReminderBanner'
 import { getSourceDocument } from '../data/sampleDoc'
 import { getUserById, USERS } from '../data/users'
-import {
-  buildReminderDraft,
-  canSendReminder,
-  formatRetryWait,
-  getReminders,
-} from '../reminders'
+import { getReminders } from '../reminders'
 import { documentRepo } from '../repo/documentRepo'
 import { applyAutoFills, useAppState } from '../state/AppState'
 import {
@@ -18,7 +13,7 @@ import {
   splitTitle,
   withRecipientSuffix,
 } from '../title'
-import type { Assignee, DocumentInstance, FieldDef, ReminderEmail } from '../types'
+import type { Assignee, DocumentInstance, FieldDef } from '../types'
 import { validateAssigneeFields } from '../validation'
 
 interface Props {
@@ -37,8 +32,6 @@ export function DocumentEditorPage({ documentId }: Props) {
   const [recipientChoice, setRecipientChoice] = useState('')
   const [templateName, setTemplateName] = useState('')
   const [showTemplateModal, setShowTemplateModal] = useState(false)
-  const [showReminderModal, setShowReminderModal] = useState(false)
-  const [nowTick, setNowTick] = useState(() => Date.now())
   const [undoStack, setUndoStack] = useState<DocumentInstance[]>([])
   const [banner, setBanner] = useState<{
     text: string
@@ -55,18 +48,10 @@ export function DocumentEditorPage({ documentId }: Props) {
     setRecipientChoice('')
     setBanner(null)
     setShowTemplateModal(false)
-    setShowReminderModal(false)
     setTemplateName('')
   }, [documentId])
 
-  // Refresh reminder button eligibility while waiting on cooldown
-  useEffect(() => {
-    const id = window.setInterval(() => setNowTick(Date.now()), 1000)
-    return () => window.clearInterval(id)
-  }, [])
-
   void version
-  void nowTick
   const document = documentRepo.getDocument(documentId)
 
   const canEdit =
@@ -341,62 +326,7 @@ export function DocumentEditorPage({ documentId }: Props) {
     setTemplateName('')
   }
 
-  const reminderGate = canSendReminder(document, new Date(nowTick))
   const reminders = getReminders(document)
-  const reminderDraft =
-    isSender && document.status === 'sent'
-      ? buildReminderDraft(document, currentUser)
-      : null
-
-  const openReminderModal = () => {
-    if (!isSender || document.status !== 'sent') return
-    if (!reminderGate.ok) {
-      const wait = reminderGate.retryAt
-        ? ` Try again in ${formatRetryWait(reminderGate.retryAt, new Date(nowTick))}.`
-        : ''
-      setBanner({ text: `${reminderGate.reason}${wait}`, tone: 'error' })
-      return
-    }
-    setShowReminderModal(true)
-  }
-
-  const handleSendReminder = (subject: string, body: string) => {
-    if (!isSender || document.status !== 'sent') return
-    const gate = canSendReminder(document)
-    if (!gate.ok) {
-      setBanner({ text: gate.reason, tone: 'error' })
-      return
-    }
-    const toEmail = document.recipientEmail
-    const toName = document.recipientName
-    if (!toEmail || !toName) {
-      setBanner({ text: 'Recipient email is missing.', tone: 'error' })
-      return
-    }
-
-    const reminder: ReminderEmail = {
-      id: crypto.randomUUID(),
-      sentAt: new Date().toISOString(),
-      sentByUserId: currentUser.id,
-      toEmail,
-      toName,
-      subject,
-      body,
-    }
-
-    persist(
-      {
-        ...document,
-        reminders: [...reminders, reminder],
-      },
-      { recordHistory: false },
-    )
-    setShowReminderModal(false)
-    setBanner({
-      text: `Reminder emailed to ${toName} (mock send). They’ll see it when they open the document.`,
-      tone: 'ok',
-    })
-  }
 
   if (!source) {
     return <div className="page-panel">Missing source document.</div>
@@ -438,7 +368,6 @@ export function DocumentEditorPage({ documentId }: Props) {
 
         {(canEdit ||
           (document.status === 'draft' && isSender) ||
-          (document.status === 'sent' && isSender) ||
           (document.status === 'sent' && isRecipient) ||
           (!isSender && !isRecipient)) && (
           <div className="toolbar-row toolbar-row-actions">
@@ -447,12 +376,6 @@ export function DocumentEditorPage({ documentId }: Props) {
             )}
             {placementMode && (
               <span className="hint">Click a page to place a field</span>
-            )}
-            {document.status === 'sent' && isSender && !reminderGate.ok && reminderGate.retryAt && (
-              <span className="hint">
-                Reminder available in{' '}
-                {formatRetryWait(reminderGate.retryAt, new Date(nowTick))}
-              </span>
             )}
             <div className="toolbar-actions">
               {canEdit && (
@@ -493,21 +416,6 @@ export function DocumentEditorPage({ documentId }: Props) {
                     Send
                   </button>
                 </>
-              )}
-              {document.status === 'sent' && isSender && (
-                <button
-                  type="button"
-                  className="btn primary"
-                  onClick={openReminderModal}
-                  disabled={!reminderGate.ok}
-                  title={
-                    reminderGate.ok
-                      ? 'Compose a reminder email'
-                      : reminderGate.reason
-                  }
-                >
-                  Send reminder
-                </button>
               )}
               {document.status === 'sent' && isRecipient && (
                 <button type="button" className="btn primary" onClick={handleComplete}>
@@ -576,27 +484,8 @@ export function DocumentEditorPage({ documentId }: Props) {
         </div>
       )}
 
-      {showReminderModal && reminderDraft && document.recipientEmail && document.recipientName && (
-        <ReminderModal
-          toName={document.recipientName}
-          toEmail={document.recipientEmail}
-          initialSubject={reminderDraft.subject}
-          initialBody={reminderDraft.body}
-          onCancel={() => setShowReminderModal(false)}
-          onSend={handleSendReminder}
-        />
-      )}
-
       {document.status === 'sent' && isRecipient && latestReminder && (
-        <div className="banner banner-reminder" role="status">
-          <div>
-            <strong>Reminder from {getUserById(latestReminder.sentByUserId)?.name ?? 'sender'}</strong>
-            <div className="muted small">
-              {new Date(latestReminder.sentAt).toLocaleString()} · {latestReminder.subject}
-            </div>
-            <pre className="reminder-preview">{latestReminder.body}</pre>
-          </div>
-        </div>
+        <RecipientReminderBanner reminder={latestReminder} />
       )}
 
       <div

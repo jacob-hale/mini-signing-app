@@ -403,8 +403,31 @@ select {
   align-items: flex-start;
 }
 
+.reminder-collapsible {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.reminder-collapsible-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.reminder-collapsible-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.reminder-toggle {
+  flex-shrink: 0;
+}
+
 .reminder-preview {
-  margin: 0.5rem 0 0;
+  margin: 0;
   padding: 0.6rem 0.75rem;
   background: rgba(255, 255, 255, 0.7);
   border-radius: 6px;
@@ -412,8 +435,10 @@ select {
   font-size: 0.85rem;
   white-space: pre-wrap;
   color: var(--ink);
-  max-height: 160px;
-  overflow: auto;
+}
+
+.table-actions {
+  flex-wrap: nowrap;
 }
 
 .reminder-history {

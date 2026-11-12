@@ -73,11 +73,11 @@ Demo waits: **15s after send** before the first reminder; **30s between** remind
 
 | Step | Expected |
 |---|---|
-| As Alex, send a doc to Jordan; open it immediately | **Send reminder** disabled; hint shows countdown |
-| Wait until countdown clears; **Send reminder** | Modal opens with To, prefilled subject/body |
-| Edit the message; **Send reminder email** | Success banner; reminder listed in the status sidebar |
-| Click **Send reminder** again immediately | Disabled / error until cooldown ends |
-| Switch to Jordan; open the same doc | Orange reminder banner shows subject + message body |
+| As Alex, send a doc to Jordan; stay on **Documents** list | Row shows **Remind in …s** (or disabled) until wait ends |
+| When ready, **Send reminder** on the list row | Modal opens with To, prefilled subject/body (no need to open the doc) |
+| Edit the message; **Send reminder email** | Success banner on the list |
+| Click **Send reminder** again immediately | Shows cooldown on the button |
+| Switch to Jordan; open the same doc | Compact orange reminder bar (collapsed); **Show message** expands full body without inner scroll |
 
 ### 7. Templates
 
