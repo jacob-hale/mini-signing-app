@@ -51,6 +51,7 @@ export function FieldOverlay({
         return (
           <div
             key={field.id}
+            data-field-id={field.id}
             className={[
               'field-box',
               `assignee-${field.assignee}`,

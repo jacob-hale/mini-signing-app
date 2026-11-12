@@ -276,7 +276,13 @@ export function DocumentEditorPage({ documentId }: Props) {
         </div>
       )}
 
-      <div className="editor-body">
+      <div
+        className={
+          document.status === 'draft' && isSender
+            ? 'editor-body editor-body--full'
+            : 'editor-body'
+        }
+      >
         <DocumentViewer
           pages={source.pages}
           fields={document.fields}
@@ -291,14 +297,16 @@ export function DocumentEditorPage({ documentId }: Props) {
           placementMode={placementMode}
           onPlaceField={placeField}
         />
-        {document.status === 'draft' && isSender ? (
+        {document.status === 'draft' && isSender && (
           <FieldInspector
             field={selectedField}
             layoutLocked={layoutLocked}
             onChange={updateField}
             onDelete={deleteField}
+            onClose={() => setSelectedFieldId(null)}
           />
-        ) : (
+        )}
+        {document.status !== 'draft' && (
           <aside className="inspector">
             <h2>Status</h2>
             <p>

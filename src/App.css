@@ -319,6 +319,10 @@ select {
   align-items: start;
 }
 
+.editor-body--full {
+  grid-template-columns: 1fr;
+}
+
 @media (max-width: 900px) {
   .editor-body {
     grid-template-columns: 1fr;
@@ -472,7 +476,8 @@ select {
   font-size: 1rem;
 }
 
-.inspector label {
+.inspector label,
+.field-popover label {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -480,7 +485,9 @@ select {
 }
 
 .inspector input,
-.inspector select {
+.inspector select,
+.field-popover input,
+.field-popover select {
   padding: 0.4rem 0.5rem;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -491,4 +498,69 @@ select {
   flex-direction: row !important;
   align-items: center;
   gap: 0.5rem !important;
+}
+
+.field-popover {
+  position: fixed;
+  z-index: 40;
+  width: 240px;
+  padding: 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(28, 25, 23, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.field-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.field-popover-close {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--muted);
+  padding: 0 0.15rem;
+}
+
+.field-popover-close:hover {
+  color: var(--ink);
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(28, 25, 23, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal {
+  width: min(420px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1.25rem 1.35rem;
+  box-shadow: 0 16px 40px rgba(28, 25, 23, 0.2);
+}
+
+.modal h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+}
+
+.modal-actions {
+  margin-top: 1rem;
+  justify-content: flex-end;
 }

@@ -1,8 +1,13 @@
+import { useState } from 'react'
 import { useAppState } from '../state/AppState'
 import { getUserById } from '../data/users'
 
 export function TemplatesPage() {
   const { templates, createDraft, setView, deleteTemplate, currentUser } = useAppState()
+  const [pendingDelete, setPendingDelete] = useState<{
+    id: string
+    name: string
+  } | null>(null)
 
   return (
     <div className="page-panel">
@@ -56,7 +61,7 @@ export function TemplatesPage() {
                       <button
                         type="button"
                         className="btn danger"
-                        onClick={() => deleteTemplate(t.id)}
+                        onClick={() => setPendingDelete({ id: t.id, name: t.name })}
                       >
                         Delete
                       </button>
@@ -67,6 +72,47 @@ export function TemplatesPage() {
             ))}
           </tbody>
         </table>
+      )}
+
+      {pendingDelete && (
+        <div
+          className="modal-backdrop"
+          role="presentation"
+          onClick={() => setPendingDelete(null)}
+        >
+          <div
+            className="modal"
+            role="alertdialog"
+            aria-labelledby="delete-template-title"
+            aria-describedby="delete-template-desc"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="delete-template-title">Delete template?</h2>
+            <p id="delete-template-desc" className="muted">
+              Are you sure you want to delete “{pendingDelete.name}”? This cannot be undone.
+              Existing documents created from it are not affected.
+            </p>
+            <div className="btn-row modal-actions">
+              <button
+                type="button"
+                className="btn secondary"
+                onClick={() => setPendingDelete(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn danger"
+                onClick={() => {
+                  deleteTemplate(pendingDelete.id)
+                  setPendingDelete(null)
+                }}
+              >
+                Delete template
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
