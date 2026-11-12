@@ -53,7 +53,7 @@ export function createMasterAgreementPresetFields(): FieldDef[] {
       label: 'Address',
       required: true,
       assignee: 'recipient',
-      position: { pageIndex: 0, xPct: 18, yPct: 20.5, wPct: 22, hPct: 2.0 },
+      position: { pageIndex: 0, xPct: 18, yPct: 19.7, wPct: 22, hPct: 2.0 },
     },
     {
       id: id(),
@@ -61,7 +61,7 @@ export function createMasterAgreementPresetFields(): FieldDef[] {
       label: 'City',
       required: true,
       assignee: 'recipient',
-      position: { pageIndex: 0, xPct: 48, yPct: 20.5, wPct: 16, hPct: 2.0 },
+      position: { pageIndex: 0, xPct: 48, yPct: 19.7, wPct: 16, hPct: 2.0 },
     },
     {
       id: id(),
@@ -69,7 +69,7 @@ export function createMasterAgreementPresetFields(): FieldDef[] {
       label: 'State',
       required: true,
       assignee: 'recipient',
-      position: { pageIndex: 0, xPct: 73, yPct: 20.5, wPct: 5, hPct: 2.0 },
+      position: { pageIndex: 0, xPct: 73, yPct: 19.7, wPct: 5, hPct: 2.0 },
     },
     {
       id: id(),
@@ -77,7 +77,7 @@ export function createMasterAgreementPresetFields(): FieldDef[] {
       label: 'Zip',
       required: true,
       assignee: 'recipient',
-      position: { pageIndex: 0, xPct: 84, yPct: 20.5, wPct: 6, hPct: 2.0 },
+      position: { pageIndex: 0, xPct: 84, yPct: 19.7, wPct: 6, hPct: 2.0 },
     },
     {
       id: id(),

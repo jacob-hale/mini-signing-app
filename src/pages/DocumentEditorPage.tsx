@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { DocumentViewer } from '../components/DocumentViewer'
 import { FieldInspector } from '../components/FieldInspector'
 import { getSourceDocument } from '../data/sampleDoc'
@@ -18,6 +18,10 @@ interface Props {
   documentId: string
 }
 
+function cloneDoc(doc: DocumentInstance): DocumentInstance {
+  return structuredClone(doc)
+}
+
 export function DocumentEditorPage({ documentId }: Props) {
   const { currentUser, updateDocument, saveAsTemplate, setView } = useAppState()
   const [version, setVersion] = useState(0)
@@ -25,13 +29,54 @@ export function DocumentEditorPage({ documentId }: Props) {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [recipientChoice, setRecipientChoice] = useState('')
   const [templateName, setTemplateName] = useState('')
+  const [undoStack, setUndoStack] = useState<DocumentInstance[]>([])
   const [banner, setBanner] = useState<{
     text: string
     tone: 'error' | 'ok'
   } | null>(null)
 
+  const undoStackRef = useRef(undoStack)
+  undoStackRef.current = undoStack
+
+  useEffect(() => {
+    setUndoStack([])
+    setSelectedFieldId(null)
+    setErrors({})
+    setRecipientChoice('')
+    setBanner(null)
+  }, [documentId])
+
   void version
   const document = documentRepo.getDocument(documentId)
+
+  const canEdit =
+    !!document &&
+    ((document.status === 'draft' && document.senderId === currentUser.id) ||
+      (document.status === 'sent' && document.recipientId === currentUser.id))
+
+  const undoRef = useRef(() => {})
+  undoRef.current = () => {
+    const stack = undoStackRef.current
+    if (stack.length === 0) return
+    const prev = stack[stack.length - 1]
+    setUndoStack(stack.slice(0, -1))
+    updateDocument(cloneDoc(prev))
+    setVersion((v) => v + 1)
+    setSelectedFieldId(null)
+    setErrors({})
+  }
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey
+      if (!mod || e.key.toLowerCase() !== 'z' || e.shiftKey) return
+      if (undoStackRef.current.length === 0) return
+      e.preventDefault()
+      undoRef.current()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   if (!document) {
     return (
@@ -61,8 +106,15 @@ export function DocumentEditorPage({ documentId }: Props) {
 
   const placementMode = document.status === 'draft' && isSender
   const selectedField = document.fields.find((f) => f.id === selectedFieldId) ?? null
+  const canUndo = undoStack.length > 0 && canEdit
 
-  const persist = (next: DocumentInstance) => {
+  const persist = (
+    next: DocumentInstance,
+    opts?: { recordHistory?: boolean },
+  ) => {
+    if (opts?.recordHistory !== false) {
+      setUndoStack((stack) => [...stack.slice(-49), cloneDoc(document)])
+    }
     updateDocument(next)
     setVersion((v) => v + 1)
   }
@@ -131,7 +183,6 @@ export function DocumentEditorPage({ documentId }: Props) {
       return
     }
 
-    // Fill empty suffix from recipient so the inbox title is distinctive
     const title = withRecipientSuffix(document.title, recipient.name)
     if (!hasTitleSuffix(title)) {
       setBanner({
@@ -171,16 +222,20 @@ export function DocumentEditorPage({ documentId }: Props) {
       return
     }
 
-    persist({
-      ...document,
-      title,
-      values: withAutos,
-      status: 'sent',
-      recipientId: recipient.id,
-      recipientEmail: recipient.email,
-      recipientName: recipient.name,
-      sentAt: new Date().toISOString(),
-    })
+    persist(
+      {
+        ...document,
+        title,
+        values: withAutos,
+        status: 'sent',
+        recipientId: recipient.id,
+        recipientEmail: recipient.email,
+        recipientName: recipient.name,
+        sentAt: new Date().toISOString(),
+      },
+      { recordHistory: false },
+    )
+    setUndoStack([])
     setBanner({
       text: 'Document sent. Switch to the recipient user to fill and sign.',
       tone: 'ok',
@@ -198,7 +253,6 @@ export function DocumentEditorPage({ documentId }: Props) {
     setRecipientChoice(userId)
     const recipient = getUserById(userId)
     if (!recipient) return
-    // Only auto-fill when the suffix is still empty so custom names aren’t overwritten
     if (!hasTitleSuffix(document.title)) {
       persist({
         ...document,
@@ -239,12 +293,16 @@ export function DocumentEditorPage({ documentId }: Props) {
       return
     }
 
-    persist({
-      ...document,
-      values: withAutos,
-      status: 'completed',
-      completedAt: new Date().toISOString(),
-    })
+    persist(
+      {
+        ...document,
+        values: withAutos,
+        status: 'completed',
+        completedAt: new Date().toISOString(),
+      },
+      { recordHistory: false },
+    )
+    setUndoStack([])
     setBanner({ text: 'Document completed and locked.', tone: 'ok' })
   }
 
@@ -290,6 +348,17 @@ export function DocumentEditorPage({ documentId }: Props) {
           )}
         </div>
         <div className="btn-row">
+          {canEdit && (
+            <button
+              type="button"
+              className="btn secondary"
+              onClick={() => undoRef.current()}
+              disabled={!canUndo}
+              title="Undo (Ctrl/Cmd+Z)"
+            >
+              Undo
+            </button>
+          )}
           {placementMode && <span className="hint">Click a page to place a field</span>}
           {document.status === 'draft' && isSender && (
             <>
