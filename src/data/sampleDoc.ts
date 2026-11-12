@@ -19,6 +19,8 @@ export function getSourceDocument(id: string): SourceDocument | undefined {
 export function createMasterAgreementPresetFields(): FieldDef[] {
   const id = () => crypto.randomUUID()
 
+  // Page 1 table cells (approx % of page): outer 8.8–91.1;
+  // Agent|Email & Phone|Fax split ~41.7; Address|City ~41.7; City|State ~66.4; State|Zip ~78.8
   return [
     // Page 1 — Customer Information (recipient)
     {
@@ -27,7 +29,7 @@ export function createMasterAgreementPresetFields(): FieldDef[] {
       label: 'Customer Legal Name',
       required: true,
       assignee: 'recipient',
-      position: { pageIndex: 0, xPct: 28, yPct: 14.5, wPct: 65, hPct: 2.2 },
+      position: { pageIndex: 0, xPct: 27, yPct: 14.8, wPct: 62, hPct: 2.0 },
     },
     {
       id: id(),
@@ -35,7 +37,7 @@ export function createMasterAgreementPresetFields(): FieldDef[] {
       label: 'Purchasing Agent',
       required: true,
       assignee: 'recipient',
-      position: { pageIndex: 0, xPct: 24, yPct: 17.2, wPct: 28, hPct: 2.2 },
+      position: { pageIndex: 0, xPct: 24, yPct: 17.8, wPct: 16, hPct: 2.0 },
     },
     {
       id: id(),
@@ -43,7 +45,7 @@ export function createMasterAgreementPresetFields(): FieldDef[] {
       label: 'Email',
       required: true,
       assignee: 'recipient',
-      position: { pageIndex: 0, xPct: 58, yPct: 17.2, wPct: 35, hPct: 2.2 },
+      position: { pageIndex: 0, xPct: 48, yPct: 17.8, wPct: 41, hPct: 2.0 },
     },
     {
       id: id(),
@@ -51,7 +53,7 @@ export function createMasterAgreementPresetFields(): FieldDef[] {
       label: 'Address',
       required: true,
       assignee: 'recipient',
-      position: { pageIndex: 0, xPct: 16, yPct: 19.8, wPct: 40, hPct: 2.2 },
+      position: { pageIndex: 0, xPct: 18, yPct: 20.5, wPct: 22, hPct: 2.0 },
     },
     {
       id: id(),
@@ -59,7 +61,7 @@ export function createMasterAgreementPresetFields(): FieldDef[] {
       label: 'City',
       required: true,
       assignee: 'recipient',
-      position: { pageIndex: 0, xPct: 62, yPct: 19.8, wPct: 14, hPct: 2.2 },
+      position: { pageIndex: 0, xPct: 48, yPct: 20.5, wPct: 16, hPct: 2.0 },
     },
     {
       id: id(),
@@ -67,7 +69,7 @@ export function createMasterAgreementPresetFields(): FieldDef[] {
       label: 'State',
       required: true,
       assignee: 'recipient',
-      position: { pageIndex: 0, xPct: 82, yPct: 19.8, wPct: 6, hPct: 2.2 },
+      position: { pageIndex: 0, xPct: 73, yPct: 20.5, wPct: 5, hPct: 2.0 },
     },
     {
       id: id(),
@@ -75,7 +77,7 @@ export function createMasterAgreementPresetFields(): FieldDef[] {
       label: 'Zip',
       required: true,
       assignee: 'recipient',
-      position: { pageIndex: 0, xPct: 91, yPct: 19.8, wPct: 7, hPct: 2.2 },
+      position: { pageIndex: 0, xPct: 84, yPct: 20.5, wPct: 6, hPct: 2.0 },
     },
     {
       id: id(),
@@ -83,7 +85,7 @@ export function createMasterAgreementPresetFields(): FieldDef[] {
       label: 'Phone',
       required: true,
       assignee: 'recipient',
-      position: { pageIndex: 0, xPct: 14, yPct: 22.5, wPct: 30, hPct: 2.2 },
+      position: { pageIndex: 0, xPct: 16, yPct: 22.9, wPct: 23, hPct: 2.0 },
     },
     {
       id: id(),
@@ -91,7 +93,7 @@ export function createMasterAgreementPresetFields(): FieldDef[] {
       label: 'Fax',
       required: false,
       assignee: 'recipient',
-      position: { pageIndex: 0, xPct: 52, yPct: 22.5, wPct: 30, hPct: 2.2 },
+      position: { pageIndex: 0, xPct: 48, yPct: 22.9, wPct: 41, hPct: 2.0 },
     },
 
     // Page 2 — Lone Star (sender) signature block (left)
