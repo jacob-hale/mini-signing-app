@@ -1,13 +1,13 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Assignee, FieldDef, FieldType } from '../types'
 
-const FIELD_TYPES: FieldType[] = [
-  'text',
-  'email',
-  'phone',
-  'date',
-  'signature',
-  'signerName',
+const FIELD_TYPES: { value: FieldType; label: string }[] = [
+  { value: 'text', label: 'Text' },
+  { value: 'email', label: 'Email' },
+  { value: 'phone', label: 'Phone' },
+  { value: 'date', label: 'Date' },
+  { value: 'signature', label: 'Signature' },
+  { value: 'signerName', label: 'Signer Name' },
 ]
 
 interface FieldInspectorProps {
@@ -106,12 +106,12 @@ export function FieldInspector({
           : { top: 0, left: 0, visibility: 'hidden' }
       }
       role="dialog"
-      aria-label="Edit field"
+      aria-label="Edit Field"
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
     >
       <div className="field-popover-header">
-        <strong>Edit field</strong>
+        <strong>Edit Field</strong>
         <button
           type="button"
           className="field-popover-close"
@@ -145,8 +145,8 @@ export function FieldInspector({
           }}
         >
           {FIELD_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t}
+            <option key={t.value} value={t.value}>
+              {t.label}
             </option>
           ))}
         </select>
@@ -184,10 +184,6 @@ export function FieldInspector({
           Auto-fill with signing date
         </label>
       )}
-      <p className="muted small">
-        Page {field.position.pageIndex + 1} · {field.position.xPct.toFixed(1)}%,{' '}
-        {field.position.yPct.toFixed(1)}%
-      </p>
       {!disabled && (
         <button
           type="button"
