@@ -67,17 +67,28 @@ Use a clean browser profile or clear `localStorage` for this origin if you want 
 | Fill required page 1 fields with valid email/phone; fill recipient signature + title; **Finish & sign** | Status **completed**; recipient print name + date auto-filled; document fully locked for both parties |
 | As Alex or Jordan, reopen | No edits possible; list shows **completed** |
 
-### 6. Templates (Part 2)
+### 6. Send reminder (Part 2)
+
+Demo waits: **15s after send** before the first reminder; **30s between** reminders (stand-ins for day-scale production rules).
 
 | Step | Expected |
 |---|---|
-| As Alex, create a draft with fields (or MA preset); enter a template name; **Save as template** | Banner confirms save |
+| As Alex, send a doc to Jordan; open it immediately | **Send reminder** disabled; hint shows countdown |
+| Wait until countdown clears; **Send reminder** | Modal opens with To, prefilled subject/body |
+| Edit the message; **Send reminder email** | Success banner; reminder listed in the status sidebar |
+| Click **Send reminder** again immediately | Disabled / error until cooldown ends |
+| Switch to Jordan; open the same doc | Orange reminder banner shows subject + message body |
+
+### 7. Templates
+
+| Step | Expected |
+|---|---|
+| As Alex, create a draft with fields (or MA preset); **Save as template** | Modal asks for a name; save confirms |
 | Open **Templates** | Named template listed with field count |
 | **New from template** | New **draft** opens with same field layout, empty values, independent of the original |
-| Complete or abandon the new draft | Original template and any other instances unchanged |
-| Delete template (as creator) | Removed from Templates list |
+| Delete template (as creator) | Confirm dialog, then removed from list |
 
-### 7. End-to-end happy path (smoke)
+### 8. End-to-end happy path (smoke)
 
 1. Alex → **New with MA preset** → fill sender signature + title → send to Jordan.  
 2. Jordan → open → fill customer info + recipient signature/title → **Finish & sign**.  
@@ -115,22 +126,26 @@ types: SourceDocument | FieldDef | DocumentInstance | Template
 4. **Typed script-font signatures** — Meets the brief without canvas tooling.
 5. **Preset Master Agreement layout** — Approximate positions for the sample blanks so the happy path is demoable without pixel-perfect manual placement.
 
-## Part 2 feature: Templates
+## Part 2 feature: In-app send reminder
 
-**Why:** Templates are the natural product of separating layout from values. Senders reuse a field layout (“Master Agreement – standard”) for new customers without rebuilding placement.
+**Pain point:** A sender checks a still-unsigned document and would otherwise leave the app, find the recipient’s email, and hand-write context. That friction delays follow-up.
 
-**How it fits:** Saving a template clones field defs (new IDs) into `Template` storage. “New from template” creates a fresh `draft` instance with empty values and the same layout. Templates are managed on the Templates page and via “Save as template” on a draft.
+**What we built:** On `sent` documents, the sender gets **Send reminder** after a short wait. A modal opens with a **prefilled, editable** subject/body (title, sent time, recipient, sender). Confirming records a `ReminderEmail` on the document (mock send — no SMTP) and shows the message to the recipient when they open the doc. Cooldown prevents spam. Rules live in `src/reminders.ts` so production intervals can change without touching UI.
+
+**Why this over a raw `mailto:` link:** The action stays in the product lifecycle, is gated by status/time, persists history, and closes the loop for the recipient inside the app.
+
+**Also built:** Templates (save/reuse field layouts) — complementary to the layout-vs-values split, but reminders are the Part 2 feature chosen for the user pain point above.
 
 ## How I used AI
 
 - **Cursor (Composer)** for scaffolding, React components, repository layer, and CSS.
-- I drove the data model (source vs layout vs instance), % coordinates, and the Templates feature before generating code.
+- I drove the data model (source vs layout vs instance), % coordinates, reminder rules, and feature choice before generating code.
 - **Rejected / changed AI output:** An early editor page used a CommonJS-style `require` to reload documents; I replaced that with a direct ESM import of `documentRepo` plus a local version counter so the UI stays consistent with Vite’s module system and the repository seam.
 
 ## What’s unfinished
 
 - Field drag-resize and perfect pixel alignment to the PDF blanks.
 - Drawn (canvas) signatures.
-- Real auth, email delivery, and a backend API.
+- Real auth, real email delivery, and a backend API (reminders are mocked in-app).
 - Automated tests (manual checklist was used instead).
 - Multi-document upload beyond the bundled Master Agreement.

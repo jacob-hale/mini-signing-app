@@ -59,6 +59,17 @@ export interface FieldLayout {
   fields: FieldDef[]
 }
 
+/** Mock email reminder sent from the app (no real SMTP). */
+export interface ReminderEmail {
+  id: string
+  sentAt: string
+  sentByUserId: string
+  toEmail: string
+  toName: string
+  subject: string
+  body: string
+}
+
 export interface DocumentInstance {
   id: string
   title: string
@@ -76,6 +87,8 @@ export interface DocumentInstance {
   completedAt: string | null
   /** Optional link back to a template this was created from */
   templateId: string | null
+  /** Reminder emails recorded on this document (mock send) */
+  reminders?: ReminderEmail[]
 }
 
 export interface Template {

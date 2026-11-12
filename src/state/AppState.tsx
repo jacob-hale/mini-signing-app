@@ -108,6 +108,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         sentAt: null,
         completedAt: null,
         templateId,
+        reminders: [],
       }
       documentRepo.saveDocument(doc)
       refresh()

@@ -395,6 +395,51 @@ select {
   color: #991b1b;
 }
 
+.banner-reminder {
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  color: #9a3412;
+  font-weight: 500;
+  align-items: flex-start;
+}
+
+.reminder-preview {
+  margin: 0.5rem 0 0;
+  padding: 0.6rem 0.75rem;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 6px;
+  font-family: var(--font);
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+  color: var(--ink);
+  max-height: 160px;
+  overflow: auto;
+}
+
+.reminder-history {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line);
+}
+
+.reminder-history h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.9rem;
+}
+
+.reminder-history ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.reminder-history li {
+  font-size: 0.85rem;
+}
+
 .banner-dismiss {
   margin-left: auto;
   border: none;
@@ -673,6 +718,10 @@ select {
   font-size: 1.15rem;
 }
 
+.modal-wide {
+  width: min(560px, 100%);
+}
+
 .modal-field {
   display: flex;
   flex-direction: column;
@@ -681,11 +730,15 @@ select {
   font-size: 0.9rem;
 }
 
-.modal-field input {
+.modal-field input,
+.modal-field textarea,
+.reminder-body {
   padding: 0.5rem 0.65rem;
   border: 1px solid var(--line);
   border-radius: 6px;
   background: white;
+  font: inherit;
+  resize: vertical;
 }
 
 .modal-actions {
