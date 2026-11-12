@@ -96,14 +96,17 @@ export function createMasterAgreementPresetFields(): FieldDef[] {
       position: { pageIndex: 0, xPct: 48, yPct: 22.9, wPct: 41, hPct: 2.0 },
     },
 
-    // Page 2 — Lone Star (sender) signature block (left)
+    // Page 2 signature table (measured): outer 8.8–91.1, mid 50.0;
+    // name|date splits 35.5 / 76.7; rows ~53.9 header, ~55–56.6 signature,
+    // ~56.9–59.3 name/date + title band (labels near top of band).
+    // Lone Star (sender) — left column
     {
       id: id(),
       type: 'signature',
       label: 'Sender Signature',
       required: true,
       assignee: 'sender',
-      position: { pageIndex: 1, xPct: 8, yPct: 78, wPct: 35, hPct: 3.5 },
+      position: { pageIndex: 1, xPct: 9.5, yPct: 55.05, wPct: 39.8, hPct: 1.45 },
     },
     {
       id: id(),
@@ -111,7 +114,7 @@ export function createMasterAgreementPresetFields(): FieldDef[] {
       label: 'Print Name',
       required: true,
       assignee: 'sender',
-      position: { pageIndex: 1, xPct: 8, yPct: 83, wPct: 22, hPct: 2.5 },
+      position: { pageIndex: 1, xPct: 16.8, yPct: 56.9, wPct: 17.8, hPct: 1.05 },
     },
     {
       id: id(),
@@ -120,7 +123,7 @@ export function createMasterAgreementPresetFields(): FieldDef[] {
       required: true,
       assignee: 'sender',
       autoDate: true,
-      position: { pageIndex: 1, xPct: 32, yPct: 83, wPct: 12, hPct: 2.5 },
+      position: { pageIndex: 1, xPct: 38.8, yPct: 56.9, wPct: 10.5, hPct: 1.05 },
     },
     {
       id: id(),
@@ -128,17 +131,17 @@ export function createMasterAgreementPresetFields(): FieldDef[] {
       label: 'Title',
       required: true,
       assignee: 'sender',
-      position: { pageIndex: 1, xPct: 8, yPct: 87.5, wPct: 35, hPct: 2.5 },
+      position: { pageIndex: 1, xPct: 9.5, yPct: 58.15, wPct: 39.8, hPct: 1.05 },
     },
 
-    // Page 2 — Customer (recipient) signature block (right)
+    // Customer (recipient) — right column
     {
       id: id(),
       type: 'signature',
       label: 'Recipient Signature',
       required: true,
       assignee: 'recipient',
-      position: { pageIndex: 1, xPct: 52, yPct: 78, wPct: 40, hPct: 3.5 },
+      position: { pageIndex: 1, xPct: 50.7, yPct: 55.05, wPct: 39.8, hPct: 1.45 },
     },
     {
       id: id(),
@@ -146,7 +149,7 @@ export function createMasterAgreementPresetFields(): FieldDef[] {
       label: 'Print Name',
       required: true,
       assignee: 'recipient',
-      position: { pageIndex: 1, xPct: 52, yPct: 83, wPct: 22, hPct: 2.5 },
+      position: { pageIndex: 1, xPct: 57.8, yPct: 56.9, wPct: 18.0, hPct: 1.05 },
     },
     {
       id: id(),
@@ -155,7 +158,7 @@ export function createMasterAgreementPresetFields(): FieldDef[] {
       required: true,
       assignee: 'recipient',
       autoDate: true,
-      position: { pageIndex: 1, xPct: 78, yPct: 83, wPct: 14, hPct: 2.5 },
+      position: { pageIndex: 1, xPct: 80.0, yPct: 56.9, wPct: 10.5, hPct: 1.05 },
     },
     {
       id: id(),
@@ -163,7 +166,7 @@ export function createMasterAgreementPresetFields(): FieldDef[] {
       label: 'Title',
       required: true,
       assignee: 'recipient',
-      position: { pageIndex: 1, xPct: 52, yPct: 87.5, wPct: 40, hPct: 2.5 },
+      position: { pageIndex: 1, xPct: 50.7, yPct: 58.15, wPct: 39.8, hPct: 1.05 },
     },
   ]
 }
