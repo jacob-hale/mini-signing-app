@@ -9,13 +9,81 @@ npm run dev
 
 Open the URL Vite prints (usually `http://localhost:5173`).
 
-**Demo path**
+Seed users in the header switcher:
 
-1. Acting as **Alex Sender**, click **New with MA preset**.
-2. Fill sender fields on page 2 (signature + title). Print name and date auto-fill on send.
-3. Choose **Jordan Recipient**, click **Send**.
-4. Switch the header user to **Jordan Recipient**, open the document, fill page 1 customer fields and recipient signature/title, then **Finish & sign**.
-5. Optionally **Save as template** from a draft, then use **Templates → New from template**.
+| User | Role in demos |
+|---|---|
+| Alex Sender | Default sender |
+| Jordan Recipient | Typical recipient |
+| Sam Buyer | Extra user (should not see others’ docs) |
+
+## Manual test plan (steps → expected results)
+
+Use a clean browser profile or clear `localStorage` for this origin if you want a fresh start (`Application` → `Local Storage` → delete keys starting with `mini-signing:`).
+
+### 1. App loads & sample document
+
+| Step | Expected |
+|---|---|
+| Run `npm run dev` and open the app | Documents list loads; header shows **Sign Mini**, Documents / Templates, and **Acting as** |
+| As Alex, click **New with MA preset** | Editor opens on a **draft**; page 1 and page 2 images render; customer fields on page 1 and signature blocks on page 2 are overlaid |
+
+### 2. User switcher & visibility
+
+| Step | Expected |
+|---|---|
+| Stay as Alex with at least one draft you created | Document appears on Alex’s list with role **Sender** |
+| Switch to **Sam Buyer** | Sam’s list does **not** include Alex’s draft (Sam is neither sender nor recipient) |
+| Switch back to Alex | Draft is visible again |
+| Refresh the page | Selected user (Alex) is still selected |
+
+### 3. Place fields (layout)
+
+| Step | Expected |
+|---|---|
+| As Alex, **New blank draft** | Empty pages; inspector says click to place |
+| Click on page 1 | A new field appears; inspector shows label / type / required / assignee |
+| Change type, label, assignee, required | Overlay updates (sender fields blue-ish, recipient amber) |
+| Narrow the browser window | Fields stay aligned on the page (percentage coordinates) |
+| Refresh | Draft and field positions/values still present |
+
+### 4. Sender fill, validation, and send
+
+| Step | Expected |
+|---|---|
+| Open MA preset draft as Alex; leave sender signature empty; pick Jordan; **Send** | Send blocked; error/banner about sender fields |
+| Fill sender **Signature** and **Title**; choose **Jordan Recipient**; **Send** | Status becomes **sent**; print name + date auto-filled for sender; layout locked; sender values read-only |
+| Still as Alex, try to click page to add fields | Placement no longer works |
+| Switch to Sam | Sent doc still not listed |
+| Switch to Jordan | Doc listed as **sent**, role **Recipient** |
+
+### 5. Recipient fill, validation, and complete
+
+| Step | Expected |
+|---|---|
+| As Jordan, open the sent doc | All fields visible; sender values read-only; only recipient fields editable; **Finish & sign** shown |
+| Leave required customer fields empty; **Finish & sign** | Blocked with validation errors |
+| Enter invalid email (e.g. `not-an-email`) | Email field error |
+| Fill required page 1 fields with valid email/phone; fill recipient signature + title; **Finish & sign** | Status **completed**; recipient print name + date auto-filled; document fully locked for both parties |
+| As Alex or Jordan, reopen | No edits possible; list shows **completed** |
+
+### 6. Templates (Part 2)
+
+| Step | Expected |
+|---|---|
+| As Alex, create a draft with fields (or MA preset); enter a template name; **Save as template** | Banner confirms save |
+| Open **Templates** | Named template listed with field count |
+| **New from template** | New **draft** opens with same field layout, empty values, independent of the original |
+| Complete or abandon the new draft | Original template and any other instances unchanged |
+| Delete template (as creator) | Removed from Templates list |
+
+### 7. End-to-end happy path (smoke)
+
+1. Alex → **New with MA preset** → fill sender signature + title → send to Jordan.  
+2. Jordan → open → fill customer info + recipient signature/title → **Finish & sign**.  
+3. Both users see **completed**; Sam never saw the document.
+
+**Expected:** Full `draft` → `sent` → `completed` flow with locks and per-user lists behaving as above.
 
 ## Architecture overview
 
