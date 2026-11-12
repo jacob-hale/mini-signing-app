@@ -333,76 +333,93 @@ export function DocumentEditorPage({ documentId }: Props) {
   return (
     <div className="editor-layout">
       <div className="editor-toolbar">
-        <button type="button" className="btn secondary" onClick={() => setView({ name: 'list' })}>
-          ← Documents
-        </button>
-        <div className="editor-title">
-          {document.status === 'draft' && isSender ? (
-            <label className="title-edit">
-              <span className="title-base">{titleBase}</span>
-              <span className="title-sep"> - </span>
-              <input
-                className="title-suffix-input"
-                value={titleSuffix}
-                placeholder="customer or deal name"
-                aria-label="Title details after the dash"
-                onChange={(e) => updateTitleSuffix(e.target.value)}
-              />
-            </label>
-          ) : (
-            <strong>{document.title}</strong>
-          )}
-          <span className={`badge status-${document.status}`}>{document.status}</span>
-          {!isSender && !isRecipient && (
-            <span className="muted">You are not a party on this document.</span>
-          )}
+        <div className="toolbar-row toolbar-row-main">
+          <button
+            type="button"
+            className="btn secondary"
+            onClick={() => setView({ name: 'list' })}
+          >
+            ← Documents
+          </button>
+          <div className="editor-title">
+            {document.status === 'draft' && isSender ? (
+              <label className="title-edit">
+                <span className="title-base">{titleBase}</span>
+                <span className="title-sep"> - </span>
+                <input
+                  className="title-suffix-input"
+                  value={titleSuffix}
+                  placeholder="customer or deal name"
+                  aria-label="Title details after the dash"
+                  onChange={(e) => updateTitleSuffix(e.target.value)}
+                />
+              </label>
+            ) : (
+              <strong className="title-readonly">{document.title}</strong>
+            )}
+            <span className={`badge status-${document.status}`}>{document.status}</span>
+          </div>
         </div>
-        <div className="btn-row">
-          {canEdit && (
-            <button
-              type="button"
-              className="btn secondary"
-              onClick={() => undoRef.current()}
-              disabled={!canUndo}
-              title="Undo (Ctrl/Cmd+Z)"
-            >
-              Undo
-            </button>
-          )}
-          {placementMode && <span className="hint">Click a page to place a field</span>}
-          {document.status === 'draft' && isSender && (
-            <>
-              <button
-                type="button"
-                className="btn secondary"
-                onClick={openSaveTemplate}
-                disabled={document.fields.length === 0}
-              >
-                Save as template
-              </button>
-              <select
-                value={recipientChoice}
-                onChange={(e) => onRecipientChange(e.target.value)}
-                aria-label="Choose recipient"
-              >
-                <option value="">Select recipient…</option>
-                {otherUsers.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} ({u.email})
-                  </option>
-                ))}
-              </select>
-              <button type="button" className="btn primary" onClick={handleSend}>
-                Send
-              </button>
-            </>
-          )}
-          {document.status === 'sent' && isRecipient && (
-            <button type="button" className="btn primary" onClick={handleComplete}>
-              Finish &amp; sign
-            </button>
-          )}
-        </div>
+
+        {(canEdit ||
+          (document.status === 'draft' && isSender) ||
+          (document.status === 'sent' && isRecipient) ||
+          (!isSender && !isRecipient)) && (
+          <div className="toolbar-row toolbar-row-actions">
+            {!isSender && !isRecipient && (
+              <span className="muted">You are not a party on this document.</span>
+            )}
+            {placementMode && (
+              <span className="hint">Click a page to place a field</span>
+            )}
+            <div className="toolbar-actions">
+              {canEdit && (
+                <button
+                  type="button"
+                  className="btn secondary"
+                  onClick={() => undoRef.current()}
+                  disabled={!canUndo}
+                  title="Undo (Ctrl/Cmd+Z)"
+                >
+                  Undo
+                </button>
+              )}
+              {document.status === 'draft' && isSender && (
+                <>
+                  <button
+                    type="button"
+                    className="btn secondary"
+                    onClick={openSaveTemplate}
+                    disabled={document.fields.length === 0}
+                  >
+                    Save as template
+                  </button>
+                  <select
+                    className="recipient-select"
+                    value={recipientChoice}
+                    onChange={(e) => onRecipientChange(e.target.value)}
+                    aria-label="Choose recipient"
+                  >
+                    <option value="">Select recipient…</option>
+                    {otherUsers.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button type="button" className="btn primary" onClick={handleSend}>
+                    Send
+                  </button>
+                </>
+              )}
+              {document.status === 'sent' && isRecipient && (
+                <button type="button" className="btn primary" onClick={handleComplete}>
+                  Finish &amp; sign
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {banner && (
