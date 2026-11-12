@@ -19,7 +19,10 @@ export function DocumentEditorPage({ documentId }: Props) {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [recipientChoice, setRecipientChoice] = useState('')
   const [templateName, setTemplateName] = useState('')
-  const [banner, setBanner] = useState<string | null>(null)
+  const [banner, setBanner] = useState<{
+    text: string
+    tone: 'error' | 'ok'
+  } | null>(null)
 
   void version
   const document = documentRepo.getDocument(documentId)
@@ -105,17 +108,20 @@ export function DocumentEditorPage({ documentId }: Props) {
   const handleSend = () => {
     if (!isSender || document.status !== 'draft') return
     if (!recipientChoice) {
-      setBanner('Pick a recipient.')
+      setBanner({ text: 'Pick a recipient.', tone: 'error' })
       return
     }
 
     const recipient = getUserById(recipientChoice)
     if (!recipient) {
-      setBanner('Choose a recipient from the user list so they can see the document.')
+      setBanner({
+        text: 'Choose a recipient from the user list so they can see the document.',
+        tone: 'error',
+      })
       return
     }
     if (recipient.id === currentUser.id) {
-      setBanner('Recipient must be someone else.')
+      setBanner({ text: 'Recipient must be someone else.', tone: 'error' })
       return
     }
 
@@ -142,7 +148,10 @@ export function DocumentEditorPage({ documentId }: Props) {
     }
     setErrors(validationErrors)
     if (Object.keys(validationErrors).length > 0) {
-      setBanner('Fix sender field errors before sending.')
+      setBanner({
+        text: 'Fix sender field errors before sending.',
+        tone: 'error',
+      })
       return
     }
 
@@ -155,7 +164,10 @@ export function DocumentEditorPage({ documentId }: Props) {
       recipientName: recipient.name,
       sentAt: new Date().toISOString(),
     })
-    setBanner('Document sent. Switch to the recipient user to fill and sign.')
+    setBanner({
+      text: 'Document sent. Switch to the recipient user to fill and sign.',
+      tone: 'ok',
+    })
     setSelectedFieldId(null)
   }
 
@@ -184,7 +196,10 @@ export function DocumentEditorPage({ documentId }: Props) {
     }
     setErrors(validationErrors)
     if (Object.keys(validationErrors).length > 0) {
-      setBanner('Fix recipient field errors before finishing.')
+      setBanner({
+        text: 'Fix recipient field errors before finishing.',
+        tone: 'error',
+      })
       return
     }
 
@@ -194,14 +209,14 @@ export function DocumentEditorPage({ documentId }: Props) {
       status: 'completed',
       completedAt: new Date().toISOString(),
     })
-    setBanner('Document completed and locked.')
+    setBanner({ text: 'Document completed and locked.', tone: 'ok' })
   }
 
   const handleSaveTemplate = () => {
     if (!isSender) return
     const name = templateName.trim() || 'Master Agreement – standard'
     saveAsTemplate(document.id, name)
-    setBanner(`Template “${name}” saved.`)
+    setBanner({ text: `Template “${name}” saved.`, tone: 'ok' })
     setTemplateName('')
   }
 
@@ -268,8 +283,11 @@ export function DocumentEditorPage({ documentId }: Props) {
       </div>
 
       {banner && (
-        <div className="banner" role="status">
-          {banner}
+        <div
+          className={`banner banner-${banner.tone}`}
+          role={banner.tone === 'error' ? 'alert' : 'status'}
+        >
+          {banner.text}
           <button type="button" className="banner-dismiss" onClick={() => setBanner(null)}>
             ×
           </button>

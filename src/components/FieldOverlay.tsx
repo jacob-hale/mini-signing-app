@@ -15,6 +15,16 @@ interface FieldOverlayProps {
   placementMode: boolean
 }
 
+function isAutoFilledField(field: FieldDef): boolean {
+  return field.type === 'signerName' || (field.type === 'date' && !!field.autoDate)
+}
+
+function autoPlaceholder(field: FieldDef): string {
+  if (field.type === 'signerName') return 'Auto: print name'
+  if (field.type === 'date' && field.autoDate) return 'Auto: signing date'
+  return '—'
+}
+
 export function FieldOverlay({
   fields,
   pageIndex,
@@ -35,16 +45,15 @@ export function FieldOverlay({
       {pageFields.map((field) => {
         const { xPct, yPct, wPct, hPct } = field.position
         const isSelected = selectedFieldId === field.id
+        const autoField = isAutoFilledField(field)
         const valueLocked =
           valuesLockedFor.includes(field.assignee) ||
           (activeRole !== null && field.assignee !== activeRole) ||
-          field.type === 'signerName' ||
-          (field.type === 'date' && field.autoDate && valuesLockedFor.includes(field.assignee))
+          autoField
         const canEditValue =
           !valueLocked &&
           activeRole === field.assignee &&
-          field.type !== 'signerName' &&
-          !(field.type === 'date' && field.autoDate)
+          !autoField
         const err = errors[field.id]
         const value = values[field.id] ?? ''
 
@@ -57,6 +66,7 @@ export function FieldOverlay({
               `assignee-${field.assignee}`,
               isSelected ? 'selected' : '',
               err ? 'has-error' : '',
+              autoField ? 'field-auto' : '',
               placementMode && !layoutLocked ? 'placement' : '',
             ]
               .filter(Boolean)
@@ -71,11 +81,16 @@ export function FieldOverlay({
               e.stopPropagation()
               if (!layoutLocked) onSelectField(field.id)
             }}
-            title={field.label}
+            title={
+              autoField
+                ? `${field.label} — filled automatically when this person sends or finishes`
+                : field.label
+            }
           >
             <span className="field-label-chip">
               {field.label}
               {field.required ? ' *' : ''}
+              {autoField ? ' · Auto' : ''}
             </span>
             {field.type === 'signature' ? (
               canEditValue ? (
@@ -99,8 +114,14 @@ export function FieldOverlay({
                 onClick={(e) => e.stopPropagation()}
               />
             ) : (
-              <span className="field-value-readonly">
-                {value || (field.type === 'date' && field.autoDate ? '(auto date)' : '—')}
+              <span
+                className={
+                  autoField && !value
+                    ? 'field-value-readonly field-auto-placeholder'
+                    : 'field-value-readonly'
+                }
+              >
+                {value || (autoField ? autoPlaceholder(field) : '—')}
               </span>
             )}
             {err && <span className="field-error">{err}</span>}

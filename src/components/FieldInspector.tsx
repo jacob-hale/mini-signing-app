@@ -184,6 +184,12 @@ export function FieldInspector({
           Auto-fill with signing date
         </label>
       )}
+      {(field.type === 'signerName' ||
+        (field.type === 'date' && field.autoDate)) && (
+        <p className="auto-hint">
+          Filled automatically when this assignee sends or finishes — they don’t type it.
+        </p>
+      )}
       {!disabled && (
         <button
           type="button"

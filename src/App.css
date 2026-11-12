@@ -297,10 +297,20 @@ select {
   align-items: center;
   gap: 0.75rem;
   padding: 0.65rem 0.9rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.banner-ok {
   background: #ecfdf5;
   border: 1px solid #99f6e4;
-  border-radius: 8px;
   color: #115e59;
+}
+
+.banner-error {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
 }
 
 .banner-dismiss {
@@ -399,6 +409,27 @@ select {
 .field-box.has-error {
   border-color: var(--danger);
   background: rgba(254, 226, 226, 0.9);
+}
+
+.field-box.field-auto {
+  border-style: dashed;
+  background: rgba(245, 245, 244, 0.92);
+}
+
+.field-auto-placeholder {
+  color: var(--muted);
+  font-style: italic;
+  font-size: clamp(0.6rem, 1.2vw, 0.78rem);
+}
+
+.auto-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--muted);
+  background: #f5f5f4;
+  border-radius: 6px;
+  padding: 0.45rem 0.5rem;
 }
 
 .field-label-chip {
