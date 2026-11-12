@@ -13,6 +13,7 @@ interface DocumentViewerProps {
   selectedFieldId: string | null
   onSelectField: (id: string | null) => void
   onChangeValue: (fieldId: string, value: string) => void
+  onMoveField?: (fieldId: string, xPct: number, yPct: number) => void
   placementMode: boolean
   onPlaceField?: (pageIndex: number, xPct: number, yPct: number) => void
 }
@@ -28,6 +29,7 @@ export function DocumentViewer({
   selectedFieldId,
   onSelectField,
   onChangeValue,
+  onMoveField,
   placementMode,
   onPlaceField,
 }: DocumentViewerProps) {
@@ -67,6 +69,7 @@ export function DocumentViewer({
               selectedFieldId={selectedFieldId}
               onSelectField={onSelectField}
               onChangeValue={onChangeValue}
+              onMoveField={onMoveField}
               placementMode={placementMode}
             />
           </div>

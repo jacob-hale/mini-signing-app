@@ -1,3 +1,4 @@
+import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import type { FieldDef, FieldValues, Assignee } from '../types'
 
 interface FieldOverlayProps {
@@ -12,6 +13,7 @@ interface FieldOverlayProps {
   selectedFieldId: string | null
   onSelectField: (id: string | null) => void
   onChangeValue: (fieldId: string, value: string) => void
+  onMoveField?: (fieldId: string, xPct: number, yPct: number) => void
   placementMode: boolean
 }
 
@@ -25,6 +27,19 @@ function autoPlaceholder(field: FieldDef): string {
   return '—'
 }
 
+interface DragState {
+  fieldId: string
+  startClientX: number
+  startClientY: number
+  originXPct: number
+  originYPct: number
+  wPct: number
+  hPct: number
+  pageWidth: number
+  pageHeight: number
+  moved: boolean
+}
+
 export function FieldOverlay({
   fields,
   pageIndex,
@@ -36,15 +51,109 @@ export function FieldOverlay({
   selectedFieldId,
   onSelectField,
   onChangeValue,
+  onMoveField,
   placementMode,
 }: FieldOverlayProps) {
   const pageFields = fields.filter((f) => f.position.pageIndex === pageIndex)
+  const dragRef = useRef<DragState | null>(null)
+  const [livePos, setLivePos] = useState<{
+    fieldId: string
+    xPct: number
+    yPct: number
+  } | null>(null)
+
+  const canDrag = placementMode && !layoutLocked && !!onMoveField
+
+  const clamp = (value: number, min: number, max: number) =>
+    Math.max(min, Math.min(max, value))
+
+  const onPointerDown = (
+    field: FieldDef,
+    e: ReactPointerEvent<HTMLDivElement>,
+  ) => {
+    if (!canDrag) return
+    // Don't start a field drag from inside an input
+    if ((e.target as HTMLElement).closest('input, textarea, select, button')) {
+      return
+    }
+
+    const page = (e.currentTarget as HTMLElement).closest(
+      '.page-surface',
+    ) as HTMLElement | null
+    if (!page) return
+
+    e.preventDefault()
+    e.stopPropagation()
+    e.currentTarget.setPointerCapture(e.pointerId)
+
+    const rect = page.getBoundingClientRect()
+    dragRef.current = {
+      fieldId: field.id,
+      startClientX: e.clientX,
+      startClientY: e.clientY,
+      originXPct: field.position.xPct,
+      originYPct: field.position.yPct,
+      wPct: field.position.wPct,
+      hPct: field.position.hPct,
+      pageWidth: rect.width,
+      pageHeight: rect.height,
+      moved: false,
+    }
+    onSelectField(field.id)
+    setLivePos({
+      fieldId: field.id,
+      xPct: field.position.xPct,
+      yPct: field.position.yPct,
+    })
+  }
+
+  const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current
+    if (!drag || drag.fieldId !== e.currentTarget.dataset.fieldId) return
+
+    const dxPct = ((e.clientX - drag.startClientX) / drag.pageWidth) * 100
+    const dyPct = ((e.clientY - drag.startClientY) / drag.pageHeight) * 100
+    if (Math.abs(dxPct) > 0.3 || Math.abs(dyPct) > 0.3) {
+      drag.moved = true
+    }
+
+    const xPct = clamp(drag.originXPct + dxPct, 0, 100 - drag.wPct)
+    const yPct = clamp(drag.originYPct + dyPct, 0, 100 - drag.hPct)
+    setLivePos({ fieldId: drag.fieldId, xPct, yPct })
+  }
+
+  const endDrag = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current
+    if (!drag || drag.fieldId !== e.currentTarget.dataset.fieldId) return
+
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId)
+    } catch {
+      // ignore if already released
+    }
+
+    if (drag.moved && livePos && livePos.fieldId === drag.fieldId && onMoveField) {
+      onMoveField(drag.fieldId, livePos.xPct, livePos.yPct)
+    } else if (!layoutLocked) {
+      onSelectField(drag.fieldId)
+    }
+
+    dragRef.current = null
+    setLivePos(null)
+  }
 
   return (
     <>
       {pageFields.map((field) => {
-        const { xPct, yPct, wPct, hPct } = field.position
+        const live =
+          livePos && livePos.fieldId === field.id
+            ? livePos
+            : null
+        const xPct = live?.xPct ?? field.position.xPct
+        const yPct = live?.yPct ?? field.position.yPct
+        const { wPct, hPct } = field.position
         const isSelected = selectedFieldId === field.id
+        const isDragging = livePos?.fieldId === field.id
         const autoField = isAutoFilledField(field)
         const valueLocked =
           valuesLockedFor.includes(field.assignee) ||
@@ -68,6 +177,8 @@ export function FieldOverlay({
               err ? 'has-error' : '',
               autoField ? 'field-auto' : '',
               placementMode && !layoutLocked ? 'placement' : '',
+              canDrag ? 'draggable' : '',
+              isDragging ? 'dragging' : '',
             ]
               .filter(Boolean)
               .join(' ')}
@@ -77,14 +188,20 @@ export function FieldOverlay({
               width: `${wPct}%`,
               height: `${hPct}%`,
             }}
+            onPointerDown={(e) => onPointerDown(field, e)}
+            onPointerMove={onPointerMove}
+            onPointerUp={endDrag}
+            onPointerCancel={endDrag}
             onClick={(e) => {
               e.stopPropagation()
-              if (!layoutLocked) onSelectField(field.id)
+              // Selection handled on pointer up when not dragging
             }}
             title={
-              autoField
-                ? `${field.label} — filled automatically when this person sends or finishes`
-                : field.label
+              canDrag
+                ? `${field.label} — drag to move`
+                : autoField
+                  ? `${field.label} — filled automatically when this person sends or finishes`
+                  : field.label
             }
           >
             <span className="field-label-chip">
@@ -100,6 +217,7 @@ export function FieldOverlay({
                   placeholder="Type full name"
                   onChange={(e) => onChangeValue(field.id, e.target.value)}
                   onClick={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => e.stopPropagation()}
                 />
               ) : (
                 <span className="signature-display">{value || '—'}</span>
@@ -112,6 +230,7 @@ export function FieldOverlay({
                 placeholder={field.label}
                 onChange={(e) => onChangeValue(field.id, e.target.value)}
                 onClick={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
               />
             ) : (
               <span

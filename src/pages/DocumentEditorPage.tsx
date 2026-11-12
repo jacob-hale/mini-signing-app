@@ -150,6 +150,19 @@ export function DocumentEditorPage({ documentId }: Props) {
     })
   }
 
+  const moveField = (fieldId: string, xPct: number, yPct: number) => {
+    const field = document.fields.find((f) => f.id === fieldId)
+    if (!field) return
+    persist({
+      ...document,
+      fields: document.fields.map((f) =>
+        f.id === fieldId
+          ? { ...f, position: { ...f.position, xPct, yPct } }
+          : f,
+      ),
+    })
+  }
+
   const deleteField = (id: string) => {
     persist({
       ...document,
@@ -375,7 +388,7 @@ export function DocumentEditorPage({ documentId }: Props) {
               <span className="muted">You are not a party on this document.</span>
             )}
             {placementMode && (
-              <span className="hint">Click a page to place a field</span>
+              <span className="hint">Click to place · drag a field to move</span>
             )}
             <div className="toolbar-actions">
               {canEdit && (
@@ -506,6 +519,7 @@ export function DocumentEditorPage({ documentId }: Props) {
           selectedFieldId={selectedFieldId}
           onSelectField={setSelectedFieldId}
           onChangeValue={changeValue}
+          onMoveField={placementMode ? moveField : undefined}
           placementMode={placementMode}
           onPlaceField={placeField}
         />

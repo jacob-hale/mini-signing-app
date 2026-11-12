@@ -568,6 +568,18 @@ select {
   background: rgba(245, 245, 244, 0.92);
 }
 
+.field-box.draggable {
+  cursor: grab;
+  touch-action: none;
+}
+
+.field-box.dragging {
+  cursor: grabbing;
+  z-index: 5;
+  opacity: 0.92;
+  box-shadow: 0 6px 18px rgba(28, 25, 23, 0.18);
+}
+
 .field-auto-placeholder {
   color: var(--muted);
   font-style: italic;
