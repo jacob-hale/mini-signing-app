@@ -4,7 +4,7 @@ import { FieldInspector } from '../components/FieldInspector'
 import { RecipientReminderBanner } from '../components/RecipientReminderBanner'
 import { getSourceDocument } from '../data/sampleDoc'
 import { getUserById, USERS } from '../data/users'
-import { getReminders } from '../reminders'
+import { getReminders, withRemindersMarkedRead } from '../reminders'
 import { documentRepo } from '../repo/documentRepo'
 import { applyAutoFills, useAppState } from '../state/AppState'
 import {
@@ -50,6 +50,16 @@ export function DocumentEditorPage({ documentId }: Props) {
     setShowTemplateModal(false)
     setTemplateName('')
   }, [documentId])
+
+  // Recipient opening a doc clears unread reminder badges on the home list
+  useEffect(() => {
+    const doc = documentRepo.getDocument(documentId)
+    if (!doc || doc.recipientId !== currentUser.id) return
+    const marked = withRemindersMarkedRead(doc)
+    if (marked !== doc) {
+      updateDocument(marked)
+    }
+  }, [documentId, currentUser.id, updateDocument])
 
   void version
   const document = documentRepo.getDocument(documentId)

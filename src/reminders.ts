@@ -11,6 +11,21 @@ export function getReminders(doc: DocumentInstance): ReminderEmail[] {
   return doc.reminders ?? []
 }
 
+export function countUnreadReminders(doc: DocumentInstance): number {
+  return getReminders(doc).filter((r) => !r.readAt).length
+}
+
+/** Mark all reminders on a doc as read (recipient opened it). */
+export function withRemindersMarkedRead(doc: DocumentInstance): DocumentInstance {
+  const reminders = getReminders(doc)
+  if (reminders.length === 0 || reminders.every((r) => r.readAt)) return doc
+  const now = new Date().toISOString()
+  return {
+    ...doc,
+    reminders: reminders.map((r) => (r.readAt ? r : { ...r, readAt: now })),
+  }
+}
+
 export function lastReminderAt(doc: DocumentInstance): string | null {
   const list = getReminders(doc)
   if (list.length === 0) return null

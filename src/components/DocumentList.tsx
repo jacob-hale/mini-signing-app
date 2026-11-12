@@ -5,6 +5,7 @@ import { getUserById } from '../data/users'
 import {
   buildReminderDraft,
   canSendReminder,
+  countUnreadReminders,
   formatRetryWait,
   getReminders,
 } from '../reminders'
@@ -175,12 +176,32 @@ export function DocumentList() {
               const reminderGate = canSendReminder(doc, new Date(nowTick))
               const canRemind =
                 doc.status === 'sent' && doc.senderId === currentUser.id
+              const unreadReminders =
+                doc.recipientId === currentUser.id ? countUnreadReminders(doc) : 0
               return (
                 <tr
                   key={doc.id}
                   onClick={() => setView({ name: 'editor', documentId: doc.id })}
                 >
-                  <td>{doc.title}</td>
+                  <td>
+                    <div className="title-with-blip">
+                      <span>{doc.title}</span>
+                      {unreadReminders > 0 && (
+                        <span
+                          className="reminder-blip"
+                          title={`${unreadReminders} new reminder${unreadReminders === 1 ? '' : 's'}`}
+                        >
+                          {unreadReminders}
+                        </span>
+                      )}
+                      {unreadReminders > 0 && (
+                        <span className="reminder-blip-label">
+                          {unreadReminders} new reminder
+                          {unreadReminders === 1 ? '' : 's'}
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td>
                     <span className={`badge status-${doc.status}`}>{statusLabel(doc.status)}</span>
                   </td>

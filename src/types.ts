@@ -68,6 +68,8 @@ export interface ReminderEmail {
   toName: string
   subject: string
   body: string
+  /** Set when the recipient opens the document and sees the reminder */
+  readAt?: string | null
 }
 
 export interface DocumentInstance {
