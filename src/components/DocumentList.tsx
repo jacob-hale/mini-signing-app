@@ -21,6 +21,21 @@ function roleFor(doc: DocumentInstance, userId: string): string {
   return '—'
 }
 
+/** Relative “Sent” label for the documents list (e.g. “3 days ago”). */
+function formatSentAgo(sentAt: string, nowMs: number): string {
+  const sentMs = new Date(sentAt).getTime()
+  if (Number.isNaN(sentMs)) return '—'
+  const diffSec = Math.max(0, Math.floor((nowMs - sentMs) / 1000))
+  if (diffSec < 60) return 'Just now'
+  const diffMin = Math.floor(diffSec / 60)
+  if (diffMin < 60) return `${diffMin} min ago`
+  const diffHr = Math.floor(diffMin / 60)
+  if (diffHr < 24) return `${diffHr} hour${diffHr === 1 ? '' : 's'} ago`
+  const diffDay = Math.floor(diffHr / 24)
+  if (diffDay < 30) return `${diffDay} day${diffDay === 1 ? '' : 's'} ago`
+  return new Date(sentAt).toLocaleDateString()
+}
+
 export function DocumentList() {
   const { documents, currentUser, createDraft, setView, deleteDraft, updateDocument } =
     useAppState()
@@ -111,7 +126,7 @@ export function DocumentList() {
               setView({ name: 'editor', documentId: doc.id })
             }}
           >
-            New with MA preset
+            New with Master preset
           </button>
           <button
             type="button"
@@ -158,6 +173,7 @@ export function DocumentList() {
               <th>Status</th>
               <th>Your role</th>
               <th>Other party</th>
+              <th>Sent</th>
               <th>Updated</th>
               <th />
             </tr>
@@ -207,6 +223,15 @@ export function DocumentList() {
                   </td>
                   <td>{roleFor(doc, currentUser.id)}</td>
                   <td>{other}</td>
+                  <td className="muted">
+                    {doc.sentAt ? (
+                      <span title={new Date(doc.sentAt).toLocaleString()}>
+                        {formatSentAgo(doc.sentAt, nowTick)}
+                      </span>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
                   <td className="muted">{new Date(stamp).toLocaleString()}</td>
                   <td>
                     <div className="btn-row table-actions" onClick={(e) => e.stopPropagation()}>

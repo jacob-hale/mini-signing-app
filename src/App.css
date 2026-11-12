@@ -437,6 +437,41 @@ select {
   color: var(--ink);
 }
 
+.reminder-inbox {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.reminder-inbox-item {
+  padding: 0.55rem 0.65rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(253, 186, 116, 0.55);
+}
+
+.reminder-inbox-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.15rem;
+}
+
+.reminder-inbox-latest {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #c2410c;
+  background: #ffedd5;
+  border-radius: 999px;
+  padding: 0.1rem 0.4rem;
+}
+
 .table-actions {
   flex-wrap: nowrap;
 }
@@ -661,7 +696,8 @@ select {
 .signature-input,
 .signature-display {
   font-family: var(--script);
-  font-size: clamp(0.85rem, 2vw, 1.15rem);
+  font-size: clamp(1.05rem, 2.8vw, 1.55rem);
+  line-height: 1.1;
   color: #1e3a8a;
 }
 

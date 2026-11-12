@@ -18,13 +18,35 @@ export function TemplatesPage() {
             Saved field layouts. Creating from a template starts a fresh draft with empty values.
           </p>
         </div>
+        <div className="btn-row">
+          <button
+            type="button"
+            className="btn secondary"
+            onClick={() => {
+              const doc = createDraft({ usePreset: true })
+              setView({ name: 'editor', documentId: doc.id })
+            }}
+          >
+            New with Master preset
+          </button>
+          <button
+            type="button"
+            className="btn primary"
+            onClick={() => {
+              const doc = createDraft()
+              setView({ name: 'editor', documentId: doc.id })
+            }}
+          >
+            New blank draft
+          </button>
+        </div>
       </div>
 
       {templates.length === 0 ? (
         <div className="empty-state">
           <p>No templates yet.</p>
           <p className="muted">
-            Open a draft, place fields (or use the MA preset), then click “Save as template”.
+            Open a draft, place fields (or use the Master preset), then click “Save as template”.
           </p>
         </div>
       ) : (

@@ -356,7 +356,6 @@ export function DocumentEditorPage({ documentId }: Props) {
   }
 
   const otherUsers = USERS.filter((u) => u.id !== document.senderId)
-  const latestReminder = reminders.length > 0 ? reminders[reminders.length - 1] : null
 
   return (
     <div className="editor-layout">
@@ -507,8 +506,8 @@ export function DocumentEditorPage({ documentId }: Props) {
         </div>
       )}
 
-      {document.status === 'sent' && isRecipient && latestReminder && (
-        <RecipientReminderBanner reminder={latestReminder} />
+      {document.status === 'sent' && isRecipient && reminders.length > 0 && (
+        <RecipientReminderBanner reminders={reminders} />
       )}
 
       <div
